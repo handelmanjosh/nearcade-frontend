@@ -5,7 +5,7 @@ import { useWallet } from "@/wallets/wallet-selector";
 
 
 export default function Arcade() {
-  const { signedAccountId, viewMethod, callMethod }: any = useWallet();
+  const { signedAccountId, viewMethod, callMethod, signIn }: any = useWallet();
   const [loading, setLoading] = useState<boolean>(true);
   const [games, setGames] = useState<any[]>([]);
   const [gameInfo, setGameInfo] = useState<any>({
@@ -17,7 +17,9 @@ export default function Arcade() {
     challenges: [],
   });
   const [creatingGame, setCreatingGame] = useState<boolean>(false);
-
+  useEffect(() => {
+    console.log(signIn);
+  }, [signIn]);
   // Function to handle form submission
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
