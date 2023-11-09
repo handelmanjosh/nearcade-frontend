@@ -1,3 +1,4 @@
+import ChallengeProgressBar from "@/components/Challenge";
 import GameModal from "@/components/Game";
 import { CONTRACT_ADDRESS } from "@/components/utils";
 import { useWallet } from "@/wallets/wallet-selector";
@@ -8,14 +9,17 @@ export default function Account() {
     const { signedAccountId, viewMethod }: any = useWallet();
     const [games, setGames] = useState<any[]>([]);
     const [stats, setStats] = useState<any[]>([]);
+    const [listings, setListings] = useState<any[]>([]);
     useEffect(() => {
         if (signedAccountId && viewMethod) {
             viewMethod(CONTRACT_ADDRESS, "getGames", {}).then((games: any) => {
-                console.log(games);
                 setGames(games);
             });
             viewMethod(CONTRACT_ADDRESS, "getStatsForPlayer", { player_id: signedAccountId }).then((stats: any) => {
                 setStats(stats);
+            });
+            viewMethod(CONTRACT_ADDRESS, "getMyListings", { account_id: signedAccountId }).then((listings: any) => {
+                setListings(listings);
             });
         }
     }, [signedAccountId, viewMethod]);
@@ -28,7 +32,6 @@ export default function Account() {
                     <p>Your games</p>
                     <div className="flex flex-row justify-center items-center gap-2">
                         {games.map((game, i) => {
-                            console.log(game, i);
                             return (
                                 <GameModal game={game} key={i} />
                             );
@@ -38,14 +41,44 @@ export default function Account() {
             }
             <p> Your challenge progress </p>
             <div className="flex flex-row justify-center items-center gap-2">
-                {games.map((game, i) => (
-                    <div className="flex flex-col justify-center items-center" key={i}>
-                        {game.challenges.map((metadata: any, index: number) => {
-                            const stat = stats.find((stat: any) => stat.game_id === game.name && stat.challenge_id === index);
-                            if (stat) {
-                                <Stat stat={stat} statsmetadata={metadata} key={index} />;
-                            }
-                        })}
+                {games.map((game: any, i: number) => {
+                    if (game.challenges.length === 0) {
+                        return (
+                            <></>
+                        );
+                    } else {
+                        return (
+                            <div className="flex flex-col justify-center items-center" key={i}>
+                                <p>{game.name}</p>
+                                {game.challenges.map((metadata: any, ii: number) => {
+                                    const stat = stats.find((stat) => stat.game_id === game.name);
+                                    return (
+                                        <ChallengeProgressBar
+                                            key={ii}
+                                            currentValue={stat ? stat.value : 0}
+                                            thresholds={metadata.thresholds}
+                                            name={metadata.name}
+                                            description={metadata.description}
+                                        />
+                                    );
+                                })}
+                            </div>
+                        );
+                    }
+                })}
+            </div>
+            <p>Your listings</p>
+            <div className="flex flex-row justify-center items-center gap-2">
+                {listings.map((listing: any, i: number) => (
+                    <div
+                        key={listing.id}
+                        className="bg-white rounded-lg shadow overflow-hidden hover:shadow-md transition-shadow duration-300 cursor-pointer"
+                    >
+                        <img src={listing.img_src} alt={listing.type} className="w-full h-36 object-fit" />
+                        <div className="p-4">
+                            <div className="font-semibold">Price: {listing.price} ARC</div>
+                            <div className="text-sm text-gray-600">Seller: {listing.seller}</div>
+                        </div>
                     </div>
                 ))}
             </div>

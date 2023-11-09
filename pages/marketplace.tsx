@@ -146,15 +146,6 @@ const Marketplace = () => {
                                         className="w-full mb-2 p-2 border rounded text-black"
                                     />
                                     <input
-                                        type="text"
-                                        name="seller"
-                                        placeholder="Seller"
-                                        onChange={handleInputChange}
-                                        value={newListing.seller}
-                                        required
-                                        className="w-full mb-2 p-2 border rounded text-black"
-                                    />
-                                    <input
                                         type="number"
                                         name="price"
                                         placeholder="Price"
