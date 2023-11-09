@@ -5,11 +5,11 @@ import { useWallet } from "@/wallets/wallet-selector";
 
 
 export default function Arcade() {
-  const { signedAccountId, viewMethod, callMethod, signIn }: any = useWallet();
+  const { signedAccountId, viewMethod, callMethod, logIn }: any = useWallet();
   const [loading, setLoading] = useState<boolean>(true);
   const [games, setGames] = useState<any[]>([]);
   const [gameInfo, setGameInfo] = useState<any>({
-    admin: '', // Replace with proper AccountId type
+    admin: '',
     url: '',
     img_url: '',
     name: '',
@@ -17,9 +17,6 @@ export default function Arcade() {
     challenges: [],
   });
   const [creatingGame, setCreatingGame] = useState<boolean>(false);
-  useEffect(() => {
-    console.log(signIn);
-  }, [signIn]);
   // Function to handle form submission
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -53,11 +50,12 @@ export default function Arcade() {
     }
   };
   useEffect(() => {
-    if (signedAccountId && viewMethod) {
+    if (viewMethod) {
       viewMethod(CONTRACT_ADDRESS, "getGames", {}).then((games: any) => {
         console.log(games);
         setGames(games);
         setLoading(false);
+        logIn();
       });
     }
   }, [signedAccountId, viewMethod]);
