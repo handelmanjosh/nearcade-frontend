@@ -1,118 +1,146 @@
-import Image from 'next/image'
-import { Inter } from 'next/font/google'
+import { useEffect, useState } from "react";
+import GameModal from "@/components/Game";
+import { CONTRACT_ADDRESS } from "@/components/utils";
+import { useWallet } from "@/wallets/wallet-selector";
 
-const inter = Inter({ subsets: ['latin'] })
 
-export default function Home() {
-  return (
-    <main
-      className={`flex min-h-screen flex-col items-center justify-between p-24 ${inter.className}`}
-    >
-      <div className="z-10 max-w-5xl w-full items-center justify-between font-mono text-sm lg:flex">
-        <p className="fixed left-0 top-0 flex w-full justify-center border-b border-gray-300 bg-gradient-to-b from-zinc-200 pb-6 pt-8 backdrop-blur-2xl dark:border-neutral-800 dark:bg-zinc-800/30 dark:from-inherit lg:static lg:w-auto  lg:rounded-xl lg:border lg:bg-gray-200 lg:p-4 lg:dark:bg-zinc-800/30">
-          Get started by editing&nbsp;
-          <code className="font-mono font-bold">pages/index.tsx</code>
-        </p>
-        <div className="fixed bottom-0 left-0 flex h-48 w-full items-end justify-center bg-gradient-to-t from-white via-white dark:from-black dark:via-black lg:static lg:h-auto lg:w-auto lg:bg-none">
-          <a
-            className="pointer-events-none flex place-items-center gap-2 p-8 lg:pointer-events-auto lg:p-0"
-            href="https://vercel.com?utm_source=create-next-app&utm_medium=default-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            By{' '}
-            <Image
-              src="/vercel.svg"
-              alt="Vercel Logo"
-              className="dark:invert"
-              width={100}
-              height={24}
-              priority
-            />
-          </a>
+export default function Arcade() {
+  const { signedAccountId, viewMethod, callMethod }: any = useWallet();
+  const [loading, setLoading] = useState<boolean>(true);
+  const [games, setGames] = useState<any[]>([]);
+  const [gameInfo, setGameInfo] = useState<any>({
+    admin: '', // Replace with proper AccountId type
+    url: '',
+    img_url: '',
+    name: '',
+    description: '',
+    challenges: [],
+  });
+  const [creatingGame, setCreatingGame] = useState<boolean>(false);
+
+  // Function to handle form submission
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    // You would normally handle the game creation logic here
+    callMethod(CONTRACT_ADDRESS, "createGame", gameInfo).then(() => {
+      console.log("created game");
+    });
+  };
+
+  // Function to handle adding a new challenge
+  const addChallenge = () => {
+    const newChallenge = { name: '', description: '', value: 0, thresholds: [] };
+    setGameInfo({ ...gameInfo, challenges: [...gameInfo.challenges, newChallenge] });
+  };
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    setGameInfo({ ...gameInfo, [e.target.name]: e.target.value });
+  };
+
+  // Function to handle input changes for challenges
+  const handleChallengeChange = (index: number, e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    if (e.target.name === 'thresholds') {
+      const updatedChallenges = gameInfo.challenges.map((challenge: any, i: number) =>
+        index === i ? { ...challenge, [e.target.name]: e.target.value.split(",").map(n => Number(n)) } : challenge
+      );
+      setGameInfo({ ...gameInfo, challenges: updatedChallenges });
+    } else {
+      const updatedChallenges = gameInfo.challenges.map((challenge: any, i: number) =>
+        index === i ? { ...challenge, [e.target.name]: e.target.value } : challenge
+      );
+      setGameInfo({ ...gameInfo, challenges: updatedChallenges });
+    }
+  };
+  useEffect(() => {
+    if (signedAccountId && viewMethod) {
+      viewMethod(CONTRACT_ADDRESS, "getGames", {}).then((games: any) => {
+        console.log(games);
+        setGames(games);
+        setLoading(false);
+      });
+    }
+  }, [signedAccountId, viewMethod]);
+  if (loading) {
+    return (
+      <div className="flex flex-row justify-center items-center w-screen">
+        <p>Loading...</p>
+      </div>
+    );
+  } else {
+    return (
+      <div className="flex flex-col justify-center items-center w-screen p-4 gap-2">
+        <p className="font-bold text-xl">Arcade</p>
+        <div className="flex flex-row justify-end items-center gap-2 w-full">
+          <button onClick={() => window.location.href = "/leaderboard"} className="text-sm bg-red-500 hover:bg-red-700 text-white py-1 px-2 rounded">Leaderboard</button>
+          <button onClick={() => window.location.href = "/account"} className="text-sm bg-green-500 hover:bg-green-700 text-white py-1 px-2 rounded">Account</button>
+          <button onClick={() => window.location.href = "/marketplace"} className="text-sm bg-yellow-500 hover:bg-yellow-700 text-white py-1 px-2 rounded">Marketplace</button>
+          <button onClick={() => setCreatingGame(true)} className="text-sm bg-blue-500 hover:bg-blue-700 text-white py-1 px-2 rounded">Create Game</button>
         </div>
+        <div className="flex flex-row justify-center items-center gap-2">
+          {games.map((game, i) => {
+            console.log(game, i);
+            return (
+              <GameModal game={game} key={i} />
+            );
+          })}
+        </div>
+        {creatingGame &&
+          <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full">
+            <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+              <h3 className="text-lg font-medium leading-6 text-gray-900">Create New Game</h3>
+              <form onSubmit={handleSubmit}>
+                {/* Form inputs for game details */}
+                <div className="my-4">
+                  <label htmlFor="name" className="block text-sm font-medium text-gray-700">Game Name</label>
+                  <input type="text" name="name" value={gameInfo.name} onChange={handleInputChange} className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm" required />
+                </div>
+                <div className="my-4">
+                  <label htmlFor="url" className="block text-sm font-medium text-gray-700">Game URL</label>
+                  <input type="text" name="url" value={gameInfo.url} onChange={handleInputChange} className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm" required />
+                </div>
+                <div className="my-4">
+                  <label htmlFor="img_url" className="block text-sm font-medium text-gray-700">Image URL</label>
+                  <input type="text" name="img_url" value={gameInfo.img_url} onChange={handleInputChange} className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm" required />
+                </div>
+                <div className="my-4">
+                  <label htmlFor="description" className="block text-sm font-medium text-gray-700">Description</label>
+                  <textarea name="description" value={gameInfo.description} onChange={handleInputChange} className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm" required />
+                </div>
+                <div className="my-4">
+                  <label htmlFor="admin" className="block text-sm font-medium text-gray-700">Admin Account ID</label>
+                  <input type="text" name="admin" value={gameInfo.admin} onChange={handleInputChange} className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm" required />
+                </div>
+
+                {/* Dynamic form inputs for challenges */}
+                {gameInfo.challenges.map((challenge: any, index: any) => (
+                  <div key={index} className="mb-4">
+                    <h4 className="text-lg font-medium leading-6 text-gray-900">Challenge {index + 1}</h4>
+                    <label htmlFor={`name-${index}`} className="block text-sm font-medium text-gray-700">Name</label>
+                    <input type="text" name="name" value={challenge.name} onChange={(e) => handleChallengeChange(index, e)} className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm" required />
+                    <label htmlFor={`description-${index}`} className="block text-sm font-medium text-gray-700">Description</label>
+                    <textarea name="description" value={challenge.description} onChange={(e) => handleChallengeChange(index, e)} className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm" required />
+                    {/* <label htmlFor={`value-${index}`} className="block text-sm font-medium text-gray-700">Value</label>
+                    <input type="number" name="value" value={challenge.value} onChange={(e) => handleChallengeChange(index, e)} className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm" required /> */}
+                    <label htmlFor={`thresholds-${index}`} className="block text-sm font-medium text-gray-700">Thresholds</label>
+                    <input type="text" name="thresholds" value={challenge.thresholds} onChange={(e) => handleChallengeChange(index, e)} className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm" required />
+                  </div>
+                ))}
+                <div className="flex flex-row justify-center items-center gap-2">
+                  <button type="button" onClick={addChallenge} className="text-sm bg-blue-500 hover:bg-blue-700 text-white py-1 px-2 rounded">
+                    Add Challenge
+                  </button>
+                  <button type="submit" className="bg-green-500 hover:bg-green-700 text-white py-1 px-4 rounded">
+                    Create Game {"(Pay 1 Near)"}
+                  </button>
+                  <button type="button" onClick={() => setCreatingGame(false)} className="bg-red-500 hover:bg-red-700 text-white py-1 px-4 rounded">
+                    Cancel
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+
+        }
       </div>
-
-      <div className="relative flex place-items-center before:absolute before:h-[300px] before:w-[480px] before:-translate-x-1/2 before:rounded-full before:bg-gradient-radial before:from-white before:to-transparent before:blur-2xl before:content-[''] after:absolute after:-z-20 after:h-[180px] after:w-[240px] after:translate-x-1/3 after:bg-gradient-conic after:from-sky-200 after:via-blue-200 after:blur-2xl after:content-[''] before:dark:bg-gradient-to-br before:dark:from-transparent before:dark:to-blue-700/10 after:dark:from-sky-900 after:dark:via-[#0141ff]/40 before:lg:h-[360px]">
-        <Image
-          className="relative dark:drop-shadow-[0_0_0.3rem_#ffffff70] dark:invert"
-          src="/next.svg"
-          alt="Next.js Logo"
-          width={180}
-          height={37}
-          priority
-        />
-      </div>
-
-      <div className="mb-32 grid text-center lg:max-w-5xl lg:w-full lg:mb-0 lg:grid-cols-4 lg:text-left">
-        <a
-          href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=default-template-tw&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className={`mb-3 text-2xl font-semibold`}>
-            Docs{' '}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className={`m-0 max-w-[30ch] text-sm opacity-50`}>
-            Find in-depth information about Next.js features and API.
-          </p>
-        </a>
-
-        <a
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=default-template-tw&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className={`mb-3 text-2xl font-semibold`}>
-            Learn{' '}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className={`m-0 max-w-[30ch] text-sm opacity-50`}>
-            Learn about Next.js in an interactive course with&nbsp;quizzes!
-          </p>
-        </a>
-
-        <a
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=default-template-tw&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className={`mb-3 text-2xl font-semibold`}>
-            Templates{' '}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className={`m-0 max-w-[30ch] text-sm opacity-50`}>
-            Discover and deploy boilerplate example Next.js&nbsp;projects.
-          </p>
-        </a>
-
-        <a
-          href="https://vercel.com/new?utm_source=create-next-app&utm_medium=default-template-tw&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className={`mb-3 text-2xl font-semibold`}>
-            Deploy{' '}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className={`m-0 max-w-[30ch] text-sm opacity-50`}>
-            Instantly deploy your Next.js site to a shareable URL with Vercel.
-          </p>
-        </a>
-      </div>
-    </main>
-  )
+    );
+  }
 }
