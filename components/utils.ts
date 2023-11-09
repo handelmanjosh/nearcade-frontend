@@ -1,4 +1,4 @@
 
 
-export const CONTRACT_ADDRESS = "dev-1699539890712-24067886911668";;;;;;;;;;;;;;;; // semi colons courtesy of Copilot
+export const CONTRACT_ADDRESS = "dev-1699545318026-40027906259084";;;;;;;;;;;;;;;; // semi colons courtesy of Copilot
 
