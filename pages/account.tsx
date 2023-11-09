@@ -10,6 +10,7 @@ export default function Account() {
     const [games, setGames] = useState<any[]>([]);
     const [stats, setStats] = useState<any[]>([]);
     const [listings, setListings] = useState<any[]>([]);
+    const [balance, setBalance] = useState<number>(0);
     useEffect(() => {
         if (signedAccountId && viewMethod) {
             viewMethod(CONTRACT_ADDRESS, "getGames", {}).then((games: any) => {
@@ -21,12 +22,14 @@ export default function Account() {
             viewMethod(CONTRACT_ADDRESS, "getMyListings", { account_id: signedAccountId }).then((listings: any) => {
                 setListings(listings);
             });
+            viewMethod(CONTRACT_ADDRESS, "getMyTickets", { player_id: signedAccountId }).then((balance: any) => { setBalance(balance); });
         }
     }, [signedAccountId, viewMethod]);
     // user can view their listings, challenges, etc
     return (
         <div className="flex flex-col justify-center items-center w-screen">
             <p className="font-bold text-xl">Account: {signedAccountId}</p>
+            <p>Your Balance: {balance} ARC</p>
             {games && games.length > 0 &&
                 <>
                     <p>Your games</p>
@@ -40,7 +43,7 @@ export default function Account() {
                 </>
             }
             <p> Your challenge progress </p>
-            <div className="flex flex-row justify-center items-center gap-2">
+            <div className="flex flex-col justify-center items-center gap-2">
                 {games.map((game: any, i: number) => {
                     if (game.challenges.length === 0) {
                         return (
@@ -50,18 +53,20 @@ export default function Account() {
                         return (
                             <div className="flex flex-col justify-center items-center" key={i}>
                                 <p>{game.name}</p>
-                                {game.challenges.map((metadata: any, ii: number) => {
-                                    const stat = stats.find((stat) => stat.game_id === game.name);
-                                    return (
-                                        <ChallengeProgressBar
-                                            key={ii}
-                                            currentValue={stat ? stat.value : 0}
-                                            thresholds={metadata.thresholds}
-                                            name={metadata.name}
-                                            description={metadata.description}
-                                        />
-                                    );
-                                })}
+                                <div className="flex flex-row justify-center items-center gap-2" >
+                                    {game.challenges.map((metadata: any, ii: number) => {
+                                        const stat = stats.find((stat) => stat.game_id === game.name);
+                                        return (
+                                            <ChallengeProgressBar
+                                                key={ii}
+                                                currentValue={stat ? stat.value : 0}
+                                                thresholds={metadata.thresholds}
+                                                name={metadata.name}
+                                                description={metadata.description}
+                                            />
+                                        );
+                                    })}
+                                </div>
                             </div>
                         );
                     }

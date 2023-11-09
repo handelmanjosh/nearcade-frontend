@@ -15,6 +15,8 @@ export default function Arcade() {
     name: '',
     description: '',
     challenges: [],
+    leaderboardRewards: [],
+    challengeRewards: []
   });
   const [creatingGame, setCreatingGame] = useState<boolean>(false);
   // Function to handle form submission
@@ -32,7 +34,14 @@ export default function Arcade() {
     setGameInfo({ ...gameInfo, challenges: [...gameInfo.challenges, newChallenge] });
   };
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    setGameInfo({ ...gameInfo, [e.target.name]: e.target.value });
+    if (e.target.name === 'leaderboardRewards') {
+      setGameInfo({ ...gameInfo, [e.target.name]: e.target.value.split(",").map(n => Number(n)) });
+    } else if (e.target.name === 'challengeRewards') {
+      console.log(e.target.value);
+      setGameInfo({ ...gameInfo, [e.target.name]: e.target.value.split(",").map(n => Number(n)) });
+    } else {
+      setGameInfo({ ...gameInfo, [e.target.name]: e.target.value });
+    }
   };
 
   // Function to handle input changes for challenges
@@ -77,7 +86,6 @@ export default function Arcade() {
         </div>
         <div className="flex flex-row justify-center items-center gap-2">
           {games.map((game, i) => {
-            console.log(game, i);
             return (
               <GameModal game={game} key={i} />
             );
@@ -106,8 +114,12 @@ export default function Arcade() {
                   <textarea name="description" value={gameInfo.description} onChange={handleInputChange} className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm" required />
                 </div>
                 <div className="my-4">
-                  <label htmlFor="admin" className="block text-sm font-medium text-gray-700">Admin Account ID</label>
-                  <input type="text" name="admin" value={gameInfo.admin} onChange={handleInputChange} className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm" required />
+                  <label htmlFor={`leaderboardRewards`} className="block text-sm font-medium text-gray-700">Leaderboard Rewards</label>
+                  <input type="text" name="leaderboardRewards" value={gameInfo.leaderboardRewards} onChange={handleInputChange} className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm" required />
+                </div>
+                <div className="my-4">
+                  <label htmlFor={`challengeRewards`} className="block text-sm font-medium text-gray-700">Challenge Rewards</label>
+                  <input type="text" name="challengeRewards" value={gameInfo.challengeRewards} onChange={handleInputChange} className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm" required />
                 </div>
 
                 {/* Dynamic form inputs for challenges */}

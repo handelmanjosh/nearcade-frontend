@@ -112,27 +112,36 @@ export default function Game() {
                         </div>
                     </div>
                 </div>
-                <p>Challenges</p>
-                <div className="flex flex-row justify-center items-center gap-4">
-                    {gameInfo.challenges.map((challenge: any, index: any) => (
-                        <ChallengeProgressBar currentValue={0} {...challenge} key={index} />
-                    ))}
-                </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-                    {gameInfo.shop?.map((listing: any) => (
-                        <div
-                            key={listing.id}
-                            className="bg-white rounded-lg shadow overflow-hidden hover:shadow-md transition-shadow duration-300 cursor-pointer"
-                            onClick={() => handleListingClick(listing)}
-                        >
-                            <img src={listing.img_src} alt={listing.type} className="w-full h-36 object-fit" />
-                            <div className="p-4">
-                                <div className="font-semibold">Price: {listing.price} ARC</div>
-                                <div className="text-sm text-gray-600">Seller: {gameInfo.name}</div>
-                            </div>
+                {gameInfo.challenges.length > 0 &&
+                    <>
+                        <p>Challenges</p>
+                        <div className="flex flex-row justify-center items-center gap-4">
+                            {gameInfo.challenges.map((challenge: any, index: any) => (
+                                <ChallengeProgressBar currentValue={0} {...challenge} key={index} />
+                            ))}
                         </div>
-                    ))}
-                </div>
+                    </>
+                }
+                {gameInfo.shop.length > 0 &&
+                    <>
+                        <p>Shop</p>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+                            {gameInfo.shop?.map((listing: any) => (
+                                <div
+                                    key={listing.id}
+                                    className="bg-white rounded-lg shadow overflow-hidden hover:shadow-md transition-shadow duration-300 cursor-pointer"
+                                    onClick={() => handleListingClick(listing)}
+                                >
+                                    <img src={listing.img_src} alt={listing.type} className="w-full h-36 object-fit" />
+                                    <div className="p-4">
+                                        <div className="font-semibold">Price: {listing.price} ARC</div>
+                                        <div className="text-sm text-gray-600">Seller: {gameInfo.name}</div>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </>
+                }
 
                 {/* Popup for listing details */}
                 {selectedListing && (

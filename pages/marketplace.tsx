@@ -38,6 +38,7 @@ const Marketplace = () => {
                 setLoading(false);
             });
             viewMethod(CONTRACT_ADDRESS, "getMyTickets", { player_id: signedAccountId }).then((tickets: number) => {
+                console.log(tickets);
                 setBalance(tickets);
             });
         }
